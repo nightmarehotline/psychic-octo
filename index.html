@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Nightmare Wiki</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --paper:#ffffff;
+      --ink:#111827;
+      --muted:#64748b;
+      --line:#d9dee8;
+      --soft:#f8fafc;
+      --accent:#111827;
+      --danger:#b91c1c;
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;
+      word-break:keep-all;
+    }
+
+    button,input,textarea{font:inherit}
+    button{cursor:pointer}
+
+    .app-header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .logo{
+      width:38px;
+      height:38px;
+      border-radius:13px;
+      background:#111827;
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      flex:none;
+    }
+
+    .brand-title{
+      font-weight:900;
+      letter-spacing:-.04em;
+      font-size:18px;
+      line-height:1;
+    }
+
+    .brand-sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .header-actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:white;
+      color:var(--ink);
+      border-radius:13px;
+      padding:9px 11px;
+      font-size:13px;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-height:38px;
+    }
+
+    .btn.dark{
+      background:#111827;
+      color:white;
+      border-color:#111827;
+    }
+
+    .btn.danger{
+      color:var(--danger);
+    }
+
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .layout{
+      max-width:1180px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:290px 1fr 230px;
+      min-height:calc(100vh - 63px);
+    }
+
+    .sidebar{
+      border-right:1px solid var(--line);
+      background:#fafbfc;
+      padding:16px;
+    }
+
+    .toc{
+      border-left:1px solid var(--line);
+      background:#fafbfc;
+      padding:16px;
+    }
+
+    .main{
+      padding:18px;
+      min-width:0;
+    }
+
+    .searchbox{
+      position:relative;
+      margin-bottom:12px;
+    }
+
+    .searchbox input,
+    .field input,
+    .field textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background:white;
+      border-radius:15px;
+      padding:12px 13px;
+      outline:none;
+    }
+
+    .searchbox input:focus,
+    .field input:focus,
+    .field textarea:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 3px rgba(17,24,39,.08);
+    }
+
+    .info-card{
+      border:1px solid var(--line);
+      background:white;
+      border-radius:var(--radius);
+      padding:14px;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:13px;
+      margin-bottom:14px;
+      box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+
+    .info-card b{
+      color:var(--ink);
+    }
+
+    .doc-list-title{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin:14px 0 8px;
+    }
+
+    .doc-btn{
+      width:100%;
+      text-align:left;
+      border:0;
+      background:transparent;
+      padding:11px 12px;
+      border-radius:13px;
+      font-weight:700;
+      color:#334155;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .doc-btn.active{
+      background:white;
+      color:#020617;
+      box-shadow:0 1px 3px rgba(15,23,42,.08);
+      outline:1px solid var(--line);
+    }
+
+    .article,
+    .editor{
+      background:white;
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:22px;
+      box-shadow:0 1px 4px rgba(15,23,42,.05);
+    }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-bottom:16px;
+    }
+
+    .pill{
+      border:1px solid var(--line);
+      background:#f8fafc;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .wiki h1{
+      margin:0 0 18px;
+      padding-bottom:14px;
+      border-bottom:1px solid var(--line);
+      font-size:34px;
+      font-weight:950;
+      letter-spacing:-.06em;
+    }
+
+    .wiki h2{
+      margin:30px 0 12px;
+      padding:10px 13px;
+      border-left:5px solid #111827;
+      background:#f8fafc;
+      border-radius:0 12px 12px 0;
+      font-size:20px;
+      letter-spacing:-.03em;
+    }
+
+    .wiki h3{
+      margin:24px 0 8px;
+      font-size:17px;
+    }
+
+    .wiki p{
+      line-height:1.85;
+      color:#1f2937;
+      margin:9px 0;
+    }
+
+    .wiki ul{
+      margin:8px 0 16px 24px;
+      padding:0;
+    }
+
+    .wiki li{
+      margin:7px 0;
+      line-height:1.75;
+    }
+
+    .wiki a{
+      color:#0f766e;
+      font-weight:800;
+      text-decoration:none;
+      border-bottom:1px solid rgba(15,118,110,.25);
+    }
+
+    .wiki a:hover{
+      border-bottom-color:#0f766e;
+    }
+
+    .wiki .missing-link{
+      color:#b45309;
+      border-bottom-color:rgba(180,83,9,.35);
+    }
+
+    .wiki .wiki-bold{
+      font-weight:900;
+      color:inherit;
+    }
+
+    .wiki .wiki-red{
+      color:#dc2626;
+      font-weight:800;
+    }
+
+    .wiki .wiki-blue{
+      color:#2563eb;
+      font-weight:800;
+    }
+
+    .wiki .wiki-green{
+      color:#16a34a;
+      font-weight:800;
+    }
+
+    .wiki img.wiki-image{
+      display:block;
+      max-width:100%;
+      max-height:520px;
+      object-fit:contain;
+      margin:14px auto;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#f8fafc;
+      box-shadow:0 1px 4px rgba(15,23,42,.06);
+    }
+
+    .empty-home{
+      min-height:58vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:56px 18px;
+    }
+
+    .empty-home-inner{
+      max-width:520px;
+    }
+
+    .empty-home-title{
+      font-size:44px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:-.07em;
+      margin:0 0 14px;
+    }
+
+    .empty-home-line{
+      width:72px;
+      height:4px;
+      border-radius:999px;
+      background:#111827;
+      margin:0 auto 22px;
+    }
+
+    .empty-home-sub{
+      margin:0;
+      color:#94a3b8;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    .toc-title{
+      font-size:14px;
+      font-weight:950;
+      margin-bottom:10px;
+    }
+
+    .toc-item{
+      font-size:13px;
+      color:#475569;
+      padding:8px;
+      border-radius:10px;
+    }
+
+    .field{
+      margin-bottom:13px;
+    }
+
+    .field label{
+      display:block;
+      font-size:13px;
+      color:#475569;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .field textarea{
+      min-height:55vh;
+      line-height:1.7;
+      resize:vertical;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:13px;
+    }
+
+    .tool-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      border:1px solid var(--line);
+      background:#f8fafc;
+      padding:10px;
+      border-radius:16px;
+      margin-bottom:13px;
+    }
+
+    .tool-row input[type=file]{
+      font-size:13px;
+      max-width:100%;
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,.48);
+      z-index:50;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .modal{
+      background:white;
+      border-radius:24px;
+      padding:18px;
+      width:100%;
+      max-width:390px;
+      box-shadow:0 20px 50px rgba(2,6,23,.25);
+    }
+
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:14px;
+    }
+
+    .modal-title{
+      font-size:19px;
+      font-weight:950;
+      letter-spacing:-.04em;
+    }
+
+    .modal p{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.65;
+      margin:5px 0 0;
+    }
+
+    .notice{
+      max-width:1180px;
+      margin:14px auto 0;
+      padding:0 18px;
+    }
+
+    .notice-inner{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:white;
+      padding:12px 14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:13px;
+      color:#334155;
+      box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+
+    .mobile-panel{
+      position:fixed;
+      inset:0;
+      z-index:40;
+      display:none;
+    }
+
+    .mobile-dim{
+      position:absolute;
+      inset:0;
+      background:rgba(2,6,23,.42);
+    }
+
+    .mobile-drawer{
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:min(84vw,330px);
+      background:#fafbfc;
+      box-shadow:14px 0 35px rgba(2,6,23,.22);
+      overflow:auto;
+    }
+
+    .mobile-only{
+      display:none;
+    }
+
+    .error{
+      color:var(--danger);
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.5;
+    }
+
+    .hidden{
+      display:none!important;
+    }
+
+    .loading{
+      color:#64748b;
+      font-size:14px;
+      padding:16px;
+    }
+
+    @media (max-width: 920px){
+      .layout{
+        display:block;
+      }
+
+      .sidebar,
+      .toc{
+        display:none;
+      }
+
+      .main{
+        padding:14px;
+      }
+
+      .article,
+      .editor{
+        padding:18px;
+        border-radius:20px;
+      }
+
+      .wiki h1{
+        font-size:30px;
+      }
+
+      .empty-home-title{
+        font-size:38px;
+      }
+
+      .mobile-only{
+        display:inline-flex;
+      }
+
+      .desktop-only{
+        display:none;
+      }
+
+      .mobile-panel.open{
+        display:block;
+      }
+
+      .brand-sub{
+        display:none;
+      }
+
+      .btn{
+        padding:9px 10px;
+      }
+
+      .header-actions .status{
+        display:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <button class="btn mobile-only" id="openMenu">☰</button>
+      <div class="logo">N</div>
+      <div>
+        <div class="brand-title">Nightmare Wiki</div>
+        <div class="brand-sub">private archive / public reading</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <span class="pill status" id="modePill">공개 열람</span>
+      <button class="btn dark" id="loginBtn">관리자 로그인</button>
+      <button class="btn" id="editBtn" style="display:none">문서 편집</button>
+      <button class="btn" id="logoutBtn" style="display:none">로그아웃</button>
+    </div>
+  </header>
+
+  <div class="notice hidden" id="notice">
+    <div class="notice-inner">
+      <span id="noticeText"></span>
+      <button class="btn" id="closeNotice">닫기</button>
+    </div>
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="mobile-dim" id="closeMenuDim"></div>
+    <div class="mobile-drawer" id="mobileDrawer"></div>
+  </div>
+
+  <main class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <section class="main">
+      <div id="viewMode">
+        <article class="article">
+          <div class="meta" id="meta"></div>
+          <div class="wiki" id="article">
+            <div class="loading">문서를 불러오는 중입니다.</div>
+          </div>
+        </article>
+      </div>
+
+      <div id="editMode" class="hidden">
+        <div class="editor">
+          <div class="field">
+            <label>문서 제목</label>
+            <input id="draftTitle" />
+          </div>
+
+          <div class="field">
+            <label>분류</label>
+            <input id="draftCategory" />
+          </div>
+
+          <div class="tool-row">
+            <button class="btn" id="insertLinkBtn" type="button">문서 링크</button>
+            <button class="btn" id="boldBtn" type="button">굵게</button>
+            <button class="btn" id="redBtn" type="button">빨강</button>
+            <button class="btn" id="blueBtn" type="button">파랑</button>
+            <button class="btn" id="greenBtn" type="button">녹색</button>
+            <input type="file" id="imageInput" accept="image/*" />
+            <button class="btn" id="uploadImageBtn" type="button">이미지 삽입</button>
+          </div>
+
+          <div class="info-card">
+            <b>문법</b><br>
+            문서 링크: <code>[[문서명]]</code> 또는 <code>[[문서명|표시명]]</code><br>
+            이미지: 이미지 삽입 버튼 사용<br>
+            굵게: <code>**굵은 글씨**</code><br>
+            색상: <code>[red]빨강[/red]</code>, <code>[blue]파랑[/blue]</code>, <code>[green]녹색[/green]</code>
+          </div>
+
+          <div class="field">
+            <label>본문</label>
+            <textarea id="draftBody"></textarea>
+          </div>
+
+          <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap">
+            <button class="btn" id="cancelEdit">취소</button>
+            <button class="btn danger" id="deletePage">문서 삭제</button>
+            <button class="btn dark" id="savePage">저장</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="toc" id="toc"></aside>
+  </main>
+
+  <div class="modal-backdrop hidden" id="loginModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">관리자 로그인</div>
+          <p>Supabase에 등록한 관리자 이메일과 비밀번호를 입력해 주세요.</p>
+        </div>
+        <button class="btn" id="closeLogin">닫기</button>
+      </div>
+
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="emailInput" placeholder="관리자 이메일" />
+      </div>
+
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" id="passwordInput" placeholder="관리자 비밀번호" />
+        <div class="error hidden" id="loginError">로그인 정보가 올바르지 않습니다.</div>
+      </div>
+
+      <button class="btn dark" id="doLogin" style="width:100%;justify-content:center">로그인</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://bfebekxudmmnveirzuov.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable__tRaHX8fLXH6ky0yEYqF8Q_o0mUI4Bf";
+
+    const TABLE_NAME = "wiki_pages";
+    const IMAGE_BUCKET = "wiki-images";
+    const ADMIN_EMAIL = "nightmarehotline@gmail.com";
+
+    const defaultPage = {
+      title: "Nightmare Wiki",
+      slug: "Nightmare Wiki",
+      category: "Main",
+      body: `# Nightmare Wiki
+
+::home::`
+    };
+
+    let supabaseClient = null;
+    let pages = [];
+    let currentSlug = "Nightmare Wiki";
+    let currentUser = null;
+    let isEditing = false;
+    let query = "";
+
+    const $ = (id) => document.getElementById(id);
+
+    function isConfigured(){
+      return SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY.startsWith("sb_publishable");
+    }
+
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function makeSlug(title){
+      return String(title || "").trim().replaceAll("/", "-") || "untitled";
+    }
+
+    function findPageByTitle(title){
+      const slug = makeSlug(title);
+      return pages.find(p => p.slug === slug || p.title === title);
+    }
+
+    function insertAtCursor(textarea, text){
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      textarea.value = textarea.value.slice(0, start) + text + textarea.value.slice(end);
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + text.length;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    function wrapSelection(textarea, before, after, placeholder){
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const selected = textarea.value.slice(start, end) || placeholder;
+      const inserted = before + selected + after;
+      textarea.value = textarea.value.slice(0, start) + inserted + textarea.value.slice(end);
+      textarea.focus();
+      textarea.selectionStart = start + before.length;
+      textarea.selectionEnd = start + before.length + selected.length;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    function parseInline(text){
+      let safe = escapeHtml(text);
+
+      safe = safe.replace(/!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g, (_m, alt, url) => {
+        return `<img class="wiki-image" src="${url}" alt="${alt || "첨부 이미지"}" loading="lazy">`;
+      });
+
+      safe = safe.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, (_m, target, label) => {
+        const exists = !!findPageByTitle(target);
+        return `<a href="#" class="wiki-link ${exists ? "" : "missing-link"}" data-target="${escapeHtml(target)}">${escapeHtml(label)}</a>`;
+      });
+
+      safe = safe.replace(/\[\[([^\]]+)\]\]/g, (_m, target) => {
+        const exists = !!findPageByTitle(target);
+        return `<a href="#" class="wiki-link ${exists ? "" : "missing-link"}" data-target="${escapeHtml(target)}">${escapeHtml(target)}</a>`;
+      });
+
+      safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong class="wiki-bold">$1</strong>');
+      safe = safe.replace(/\[red\]([\s\S]*?)\[\/red\]/g, '<span class="wiki-red">$1</span>');
+      safe = safe.replace(/\[blue\]([\s\S]*?)\[\/blue\]/g, '<span class="wiki-blue">$1</span>');
+      safe = safe.replace(/\[green\]([\s\S]*?)\[\/green\]/g, '<span class="wiki-green">$1</span>');
+
+      return safe;
+    }
+
+    function wikiToHtml(text){
+      if(String(text || "").trim() === "# Nightmare Wiki\n\n::home::"){
+        return `
+          <div class="empty-home">
+            <div class="empty-home-inner">
+              <h1 class="empty-home-title">Nightmare Wiki</h1>
+              <div class="empty-home-line"></div>
+              <p class="empty-home-sub">archive of strange documents</p>
+            </div>
+          </div>
+        `;
+      }
+
+      const lines = String(text || "").split("\n");
+      let html = "";
+      let inList = false;
+
+      for(const line of lines){
+        if(line.startsWith("- ")){
+          if(!inList){
+            html += "<ul>";
+            inList = true;
+          }
+          html += `<li>${parseInline(line.slice(2))}</li>`;
+          continue;
+        }
+
+        if(inList){
+          html += "</ul>";
+          inList = false;
+        }
+
+        if(line.startsWith("# ")){
+          html += `<h1>${parseInline(line.slice(2))}</h1>`;
+        }else if(line.startsWith("## ")){
+          html += `<h2>${parseInline(line.slice(3))}</h2>`;
+        }else if(line.startsWith("### ")){
+          html += `<h3>${parseInline(line.slice(4))}</h3>`;
+        }else if(line.trim()===""){
+          html += `<div style="height:8px"></div>`;
+        }else{
+          html += `<p>${parseInline(line)}</p>`;
+        }
+      }
+
+      if(inList){
+        html += "</ul>";
+      }
+
+      return html;
+    }
+
+    function bindWikiLinks(){
+      document.querySelectorAll(".wiki-link").forEach(a => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          const target = a.dataset.target;
+          const found = findPageByTitle(target);
+
+          if(found){
+            currentSlug = found.slug;
+            isEditing = false;
+            render();
+          }else if(currentUser){
+            if(confirm(`"${target}" 문서가 없습니다. 새 문서로 만드시겠습니까?`)){
+              createDraftPage(target);
+            }
+          }else{
+            showNotice(`"${target}" 문서는 아직 작성되지 않았습니다.`);
+          }
+        });
+      });
+    }
+
+    function getHeadings(text){
+      return String(text || "").split("\n").filter(l => l.startsWith("## ")).map(l => l.slice(3));
+    }
+
+    function showNotice(text){
+      $("noticeText").textContent = text;
+      $("notice").classList.remove("hidden");
+    }
+
+    function getCurrentPage(){
+      return pages.find(p => p.slug === currentSlug) || pages[0] || defaultPage;
+    }
+
+    async function init(){
+      if(!isConfigured()){
+        pages = [{...defaultPage, updated_at: new Date().toISOString()}];
+        render();
+        showNotice("Supabase 설정값을 확인해 주세요.");
+        return;
+      }
+
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      currentUser = sessionData?.session?.user || null;
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user || null;
+        isEditing = false;
+        render();
+      });
+
+      await loadPages();
+
+      if(!pages.length){
+        await createDefaultPage();
+        await loadPages();
+      }
+
+      const main = pages.find(p => p.slug === "Nightmare Wiki");
+      if(main){
+        currentSlug = main.slug;
+      }
+
+      render();
+    }
+
+    async function loadPages(){
+      const { data, error } = await supabaseClient
+        .from(TABLE_NAME)
+        .select("*")
+        .order("title", { ascending: true });
+
+      if(error){
+        pages = [{...defaultPage, updated_at: new Date().toISOString()}];
+        render();
+        console.error(error);
+        showNotice(`문서를 불러오지 못했습니다: ${error.message}`);
+        return;
+      }
+
+      pages = data || [];
+
+      if(!pages.find(p => p.slug === currentSlug) && pages[0]){
+        currentSlug = pages[0].slug;
+      }
+    }
+
+    async function createDefaultPage(){
+      const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .upsert({
+          slug: defaultPage.slug,
+          title: defaultPage.title,
+          category: defaultPage.category,
+          body: defaultPage.body,
+          updated_by: "system"
+        }, { onConflict: "slug" });
+
+      if(error){
+        console.error(error);
+      }
+    }
+
+    function renderSidebar(target){
+      const filtered = pages.filter(p => {
+        const haystack = `${p.title} ${p.category} ${p.body}`.toLowerCase();
+        return haystack.includes(query.toLowerCase());
+      });
+
+      target.innerHTML = `
+        <div class="searchbox">
+          <input id="${target.id}-search" placeholder="문서 검색" value="${escapeHtml(query)}" />
+        </div>
+        ${currentUser ? `<button class="btn dark" id="${target.id}-new" style="width:100%;justify-content:center;margin-bottom:14px">＋ 새 문서 작성</button>` :
+        `<div class="info-card"><b>열람 모드</b><br>문서 편집은 관리자에게만 허용됩니다.</div>`}
+        <div class="doc-list-title">Documents</div>
+        <div>
+          ${filtered.map(p => `<button class="doc-btn ${p.slug===currentSlug ? "active" : ""}" data-slug="${escapeHtml(p.slug)}"><span>${escapeHtml(p.title)}</span><span>${p.slug===currentSlug ? "›" : ""}</span></button>`).join("")}
+        </div>
+      `;
+
+      target.querySelector(`#${target.id}-search`).addEventListener("input", e=>{
+        query = e.target.value;
+        render();
+      });
+
+      if(currentUser){
+        target.querySelector(`#${target.id}-new`).addEventListener("click", startNewPage);
+      }
+
+      target.querySelectorAll(".doc-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          currentSlug = btn.dataset.slug;
+          isEditing = false;
+          $("mobilePanel").classList.remove("open");
+          render();
+        });
+      });
+    }
+
+    function render(){
+      const page = getCurrentPage();
+
+      $("modePill").textContent = currentUser ? "관리자 모드" : "공개 열람";
+      $("modePill").style.background = currentUser ? "#111827" : "#f8fafc";
+      $("modePill").style.color = currentUser ? "white" : "#6b7280";
+
+      $("loginBtn").style.display = currentUser ? "none" : "inline-flex";
+      $("editBtn").style.display = currentUser && !isEditing ? "inline-flex" : "none";
+      $("logoutBtn").style.display = currentUser ? "inline-flex" : "none";
+
+      renderSidebar($("sidebar"));
+      renderSidebar($("mobileDrawer"));
+
+      $("meta").innerHTML = `
+        <span class="pill">분류: ${escapeHtml(page.category || "미분류")}</span>
+        <span class="pill">최근 수정: ${page.updated_at ? new Date(page.updated_at).toLocaleDateString("ko-KR") : "-"}</span>
+        <span class="pill">공개 열람</span>
+      `;
+
+      $("article").innerHTML = wikiToHtml(page.body);
+      bindWikiLinks();
+
+      const headings = getHeadings(page.body);
+      $("toc").innerHTML = `
+        <div class="toc-title">목차</div>
+        ${headings.length ? headings.map((h,i)=>`<div class="toc-item">${i+1}. ${escapeHtml(h)}</div>`).join("") : `<div class="toc-item">목차가 없습니다.</div>`}
+      `;
+
+      $("viewMode").classList.toggle("hidden", isEditing);
+      $("editMode").classList.toggle("hidden", !isEditing);
+
+      if(isEditing){
+        $("draftTitle").value = page.title;
+        $("draftCategory").value = page.category || "미분류";
+        $("draftBody").value = page.body;
+      }
+    }
+
+    function openLogin(){
+      $("loginError").classList.add("hidden");
+      $("emailInput").value = "";
+      $("passwordInput").value = "";
+      $("loginModal").classList.remove("hidden");
+      setTimeout(()=>$("emailInput").focus(), 50);
+    }
+
+    function createDraftPage(title){
+      if(!currentUser){
+        openLogin();
+        return;
+      }
+
+      const cleanTitle = title || "새 문서";
+      const newPage = {
+        title: cleanTitle,
+        slug: makeSlug(cleanTitle),
+        category:"미분류",
+        body:`# ${cleanTitle}
+
+## 개요
+이곳에 문서의 개요를 작성해 주세요.`,
+        updated_at: new Date().toISOString()
+      };
+
+      pages.push(newPage);
+      currentSlug = newPage.slug;
+      isEditing = true;
+      $("mobilePanel").classList.remove("open");
+      render();
+    }
+
+    function startNewPage(){
+      let base = "새 문서";
+      let title = base;
+      let n = 1;
+
+      while(pages.find(p => p.slug === makeSlug(title))){
+        n++;
+        title = `${base} ${n}`;
+      }
+
+      createDraftPage(title);
+    }
+
+    async function saveCurrentPage(){
+      if(!currentUser){
+        return openLogin();
+      }
+
+      if(currentUser.email !== ADMIN_EMAIL){
+        showNotice(`저장 권한이 없습니다. 현재 로그인: ${currentUser.email}`);
+        return;
+      }
+
+      const old = getCurrentPage();
+      const title = $("draftTitle").value.trim() || old.title;
+      const slug = makeSlug(title);
+
+      const payload = {
+        slug,
+        title,
+        category: $("draftCategory").value.trim() || "미분류",
+        body: $("draftBody").value.trim() || `# ${title}\n\n내용이 아직 작성되지 않았습니다.`,
+        updated_by: currentUser.email
+      };
+
+      const { data, error } = await supabaseClient
+        .from(TABLE_NAME)
+        .upsert(payload, { onConflict: "slug" })
+        .select();
+
+      if(error){
+        console.error(error);
+        showNotice(`저장 실패: ${error.message}`);
+        return;
+      }
+
+      if(old.slug !== slug && old.id){
+        const { error: deleteError } = await supabaseClient
+          .from(TABLE_NAME)
+          .delete()
+          .eq("id", old.id);
+
+        if(deleteError){
+          console.error(deleteError);
+          showNotice(`새 제목으로 저장은 되었지만 기존 문서 삭제 실패: ${deleteError.message}`);
+        }
+      }
+
+      currentSlug = slug;
+      isEditing = false;
+      await loadPages();
+      render();
+      showNotice("문서가 저장되었습니다.");
+    }
+
+    async function deleteCurrentPage(){
+      if(!currentUser){
+        return openLogin();
+      }
+
+      if(currentUser.email !== ADMIN_EMAIL){
+        showNotice(`삭제 권한이 없습니다. 현재 로그인: ${currentUser.email}`);
+        return;
+      }
+
+      if(pages.length <= 1){
+        alert("문서가 하나뿐이라 삭제할 수 없습니다.");
+        return;
+      }
+
+      if(!confirm("현재 문서를 삭제하시겠습니까?")){
+        return;
+      }
+
+      const page = getCurrentPage();
+
+      const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .delete()
+        .eq("slug", page.slug);
+
+      if(error){
+        console.error(error);
+        showNotice(`삭제 실패: ${error.message}`);
+        return;
+      }
+
+      await loadPages();
+      currentSlug = pages[0]?.slug || "Nightmare Wiki";
+      isEditing = false;
+      render();
+      showNotice("문서가 삭제되었습니다.");
+    }
+
+    async function uploadAndInsertImage(){
+      if(!currentUser){
+        return openLogin();
+      }
+
+      if(currentUser.email !== ADMIN_EMAIL){
+        showNotice(`이미지 업로드 권한이 없습니다. 현재 로그인: ${currentUser.email}`);
+        return;
+      }
+
+      const file = $("imageInput").files?.[0];
+
+      if(!file){
+        showNotice("먼저 업로드할 이미지를 선택해 주세요.");
+        return;
+      }
+
+      if(!file.type.startsWith("image/")){
+        showNotice("이미지 파일만 업로드할 수 있습니다.");
+        return;
+      }
+
+      const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, "_");
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+
+      $("uploadImageBtn").disabled = true;
+      $("uploadImageBtn").textContent = "업로드 중...";
+
+      const { data, error } = await supabaseClient.storage
+        .from(IMAGE_BUCKET)
+        .upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type
+        });
+
+      $("uploadImageBtn").disabled = false;
+      $("uploadImageBtn").textContent = "이미지 삽입";
+
+      if(error){
+        console.error(error);
+        showNotice(`이미지 업로드 실패: ${error.message}`);
+        return;
+      }
+
+      const { data: publicData } = supabaseClient.storage
+        .from(IMAGE_BUCKET)
+        .getPublicUrl(data.path);
+
+      insertAtCursor($("draftBody"), `\n\n![${file.name}](${publicData.publicUrl})\n\n`);
+      showNotice("이미지 주소가 본문에 삽입되었습니다. 저장을 눌러 주세요.");
+    }
+
+    $("loginBtn").addEventListener("click", openLogin);
+
+    $("closeLogin").addEventListener("click", ()=>$("loginModal").classList.add("hidden"));
+
+    $("doLogin").addEventListener("click", async ()=>{
+      if(!supabaseClient){
+        showNotice("Supabase 설정을 먼저 확인해 주세요.");
+        return;
+      }
+
+      const email = $("emailInput").value.trim();
+      const password = $("passwordInput").value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if(error){
+        console.error(error);
+        $("loginError").classList.remove("hidden");
+        return;
+      }
+
+      $("loginModal").classList.add("hidden");
+      await loadPages();
+      render();
+      showNotice("관리자 모드로 전환되었습니다.");
+    });
+
+    $("passwordInput").addEventListener("keydown", e=>{
+      if(e.key==="Enter"){
+        $("doLogin").click();
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async ()=>{
+      if(supabaseClient){
+        await supabaseClient.auth.signOut();
+      }
+
+      currentUser = null;
+      isEditing = false;
+      render();
+      showNotice("관리자 모드가 종료되었습니다.");
+    });
+
+    $("editBtn").addEventListener("click", ()=>{
+      if(!currentUser){
+        return openLogin();
+      }
+
+      isEditing = true;
+      render();
+    });
+
+    $("cancelEdit").addEventListener("click", ()=>{
+      isEditing = false;
+      render();
+    });
+
+    $("savePage").addEventListener("click", saveCurrentPage);
+    $("deletePage").addEventListener("click", deleteCurrentPage);
+
+    $("insertLinkBtn").addEventListener("click", ()=>{
+      const title = prompt("연결할 문서 제목을 입력해 주세요.", "문서명");
+
+      if(title){
+        insertAtCursor($("draftBody"), `[[${title}]]`);
+      }
+    });
+
+    $("boldBtn").addEventListener("click", ()=>{
+      wrapSelection($("draftBody"), "**", "**", "굵은 글씨");
+    });
+
+    $("redBtn").addEventListener("click", ()=>{
+      wrapSelection($("draftBody"), "[red]", "[/red]", "빨간 글씨");
+    });
+
+    $("blueBtn").addEventListener("click", ()=>{
+      wrapSelection($("draftBody"), "[blue]", "[/blue]", "파란 글씨");
+    });
+
+    $("greenBtn").addEventListener("click", ()=>{
+      wrapSelection($("draftBody"), "[green]", "[/green]", "녹색 글씨");
+    });
+
+    $("uploadImageBtn").addEventListener("click", uploadAndInsertImage);
+
+    $("openMenu").addEventListener("click", ()=>$("mobilePanel").classList.add("open"));
+    $("closeMenuDim").addEventListener("click", ()=>$("mobilePanel").classList.remove("open"));
+    $("closeNotice").addEventListener("click", ()=>$("notice").classList.add("hidden"));
+
+    init();
+  </script>
+</body>
+</html>
